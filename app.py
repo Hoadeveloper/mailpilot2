@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import smtplib
 import threading
 import time
@@ -278,9 +279,9 @@ def send():
                 if not recipient_email:
                     continue
                 
-                # Personalize subject and body
-                personalized_subject = subject.replace("{{name}}", recipient_name)
-                personalized_body = body.replace("{{name}}", recipient_name)
+                # Personalize subject and body (case-insensitive: {{Name}}, {{name}}, {{NAME}})
+                personalized_subject = re.sub(r'\{\{name\}\}', recipient_name, subject, flags=re.IGNORECASE)
+                personalized_body = re.sub(r'\{\{name\}\}', recipient_name, body, flags=re.IGNORECASE)
                 
                 # Build message with BCC or CC based on mode
                 message = build_message(
