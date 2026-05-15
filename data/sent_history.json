@@ -1,5 +1,32 @@
 [
   {
+    "timestamp": "2026-05-15T21:45:01.776575",
+    "type": "manual",
+    "sender": "mowixibucev04@gmail.com",
+    "recipients": [],
+    "cc": [],
+    "bcc": [
+      "legitimatesource01@gmail.com",
+      "olaiwolah@14gmail.com"
+    ],
+    "subject": "A quick update for you",
+    "status": "sent"
+  },
+  {
+    "timestamp": "2026-05-15T21:43:24.127638",
+    "type": "manual",
+    "sender": "mowixibucev04@gmail.com",
+    "recipients": [],
+    "cc": [],
+    "bcc": [
+      "olaiwolah10@gmail.com",
+      "olaiwolah11@gmail.com",
+      "olaiwolah13@gmail.com"
+    ],
+    "subject": "Following up on our conversation",
+    "status": "sent"
+  },
+  {
     "timestamp": "2026-05-15T20:33:16.559079",
     "type": "manual",
     "sender": "mowixibucev04@gmail.com",
