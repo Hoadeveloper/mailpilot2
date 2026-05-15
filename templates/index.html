@@ -1,0 +1,141 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="page-grid">
+  <section class="panel wide">
+    <h1>Send Email</h1>
+    <form action="/send" method="post" enctype="multipart/form-data">
+      <div class="row">
+        <label for="sender_email">Sender Email</label>
+        <input id="sender_email" name="sender_email" type="email" placeholder="your.email@example.com" value="{{ default_sender }}" required />
+      </div>
+      <div class="row">
+        <label for="sender_name">Sender Name (displayed)</label>
+        <input id="sender_name" name="sender_name" type="text" placeholder="Your name or company" value="{{ default_sender_name if default_sender_name is defined else '' }}" />
+      </div>
+      <div class="row">
+        <label for="password">SMTP Password / App Password</label>
+        <input id="password" name="password" type="password" placeholder="Email password or app password" />
+      </div>
+      <div class="row small-grid">
+        <div>
+          <label for="smtp_host">SMTP Host</label>
+          <input id="smtp_host" name="smtp_host" type="text" value="{{ default_host }}" required />
+        </div>
+        <div>
+          <label for="smtp_port">SMTP Port</label>
+          <input id="smtp_port" name="smtp_port" type="number" value="{{ default_port }}" required />
+        </div>
+      </div>
+      <div class="row">
+        <label for="recipients">Recipients</label>
+        <textarea id="recipients" name="recipients" placeholder="email1@example.com, email2@example.com or one per line" rows="3" required></textarea>
+      </div>
+      <div class="row small-grid">
+        <div>
+          <label for="cc">CC</label>
+          <input id="cc" name="cc" type="text" placeholder="optional, comma separated" />
+        </div>
+        <div>
+          <label for="bcc">BCC</label>
+          <input id="bcc" name="bcc" type="text" placeholder="optional, comma separated" />
+        </div>
+      </div>
+      <div class="row">
+        <label for="subject">Subject</label>
+        <input id="subject" name="subject" type="text" required />
+      </div>
+      <div class="row">
+        <label for="body">Message Body</label>
+        <textarea id="body" name="body" rows="8" required></textarea>
+      </div>
+      <div class="row small-grid">
+        <div>
+          <label for="schedule_time">Schedule send time (local time)</label>
+          <input id="schedule_time" name="schedule_time" type="datetime-local" />
+        </div>
+        <div>
+          <label for="attachments">Attachments</label>
+          <input id="attachments" name="attachments" type="file" multiple />
+        </div>
+      </div>
+      <div class="row">
+        <label for="template_select">Use Template</label>
+        <select id="template_select">
+          <option value="">-- choose a template --</option>
+          {% for template in templates %}
+            <option value="{{ loop.index0 }}">{{ template.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <input id="template_name" name="template_name" type="hidden" />
+      <button type="submit" class="button primary">Send Email</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Templates</h2>
+    <form action="/template/add" method="post">
+      <div class="row">
+        <label for="new_template_name">Template Name</label>
+        <input id="new_template_name" name="new_template_name" type="text" required />
+      </div>
+      <div class="row">
+        <label for="new_template_subject">Subject</label>
+        <input id="new_template_subject" name="new_template_subject" type="text" required />
+      </div>
+      <div class="row">
+        <label for="new_template_body">Body</label>
+        <textarea id="new_template_body" name="new_template_body" rows="5" required></textarea>
+      </div>
+      <button type="submit" class="button">Save Template</button>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>Recent Activity</h2>
+    {% if history %}
+      <ul class="history-list">
+        {% for item in history %}
+          <li>
+            <strong>{{ item.subject }}</strong><br />
+            <small>{{ item.timestamp }} | {{ item.status }} | {{ item.recipients | join(", ") }}</small>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No activity yet.</p>
+    {% endif %}
+    {% if scheduled %}
+      <h3>Scheduled</h3>
+      <ul class="history-list">
+        {% for item in scheduled %}
+          <li>
+            <strong>{{ item.subject }}</strong><br />
+            <small>Send at {{ item.send_at }} UTC | {{ item.recipients | join(", ") }}</small>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+  const templates = {{ templates | tojson | safe }};
+  const templateSelect = document.getElementById('template_select');
+  const subjectField = document.getElementById('subject');
+  const bodyField = document.getElementById('body');
+  const templateNameField = document.getElementById('template_name');
+
+  templateSelect.addEventListener('change', () => {
+    const index = templateSelect.value;
+    if (index === '') {
+      templateNameField.value = '';
+      return;
+    }
+    const template = templates[Number(index)];
+    templateNameField.value = template.name;
+    subjectField.value = template.subject;
+    bodyField.value = template.body;
+  });
+</script>
+{% endblock %}

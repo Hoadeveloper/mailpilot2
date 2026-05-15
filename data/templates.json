@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Welcome Email",
+    "subject": "Welcome to my contact list",
+    "body": "Hello {{name}},\n\nThank you for connecting with me.\n\nBest regards,\nYour Name"
+  },
+  {
+    "name": "Follow Up",
+    "subject": "Following up on our conversation",
+    "body": "Hi {{name}},\n\nI wanted to follow up and see if you had any questions.\n\nRegards,\nYour Name"
+  },
+  {
+    "name": "Announcement",
+    "subject": "A quick update for you",
+    "body": "Hello,\n\nI wanted to share this update with you today.\n\nThanks,\nYour Name"
+  }
+]

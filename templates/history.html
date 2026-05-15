@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% block content %}
+<section class="panel wide">
+  <h1>Sent History</h1>
+  {% if history %}
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Type</th>
+          <th>Recipients</th>
+          <th>Subject</th>
+          <th>Status</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in history %}
+          <tr>
+            <td>{{ item.timestamp }}</td>
+            <td>{{ item.type }}</td>
+            <td>{{ item.recipients | join(", ") }}</td>
+            <td>{{ item.subject }}</td>
+            <td>{{ item.status }}</td>
+            <td>{{ item.error if item.error is defined else "" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>No sent emails have been recorded yet.</p>
+  {% endif %}
+
+  <h2>Scheduled Emails</h2>
+  {% if scheduled %}
+    <ul class="history-list">
+      {% for item in scheduled %}
+        <li>
+          <strong>{{ item.subject }}</strong><br />
+          <small>{{ item.send_at }} UTC | {{ item.recipients | join(", ") }}</small>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No emails are currently scheduled.</p>
+  {% endif %}
+</section>
+{% endblock %}
