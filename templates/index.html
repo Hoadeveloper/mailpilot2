@@ -292,15 +292,18 @@
 
   // On form submit, populate the correct field based on mode
   form.addEventListener('submit', (e) => {
-    const addresses = recipientsField.value;
+    const addresses = recipientsField.value.trim();
+    if (!addresses) {
+      e.preventDefault();
+      alert('Please enter at least one email address.');
+      return;
+    }
     if (selectedMode === 'bcc') {
       bccField.value = addresses;
       ccField.value = '';
-      recipientsField.value = '';
     } else {
       ccField.value = addresses;
       bccField.value = '';
-      recipientsField.value = '';
     }
   });
 

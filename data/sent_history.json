@@ -1,5 +1,17 @@
 [
   {
+    "timestamp": "2026-05-15T22:55:22.895392",
+    "type": "manual",
+    "sender": "mowixibucev04@gmail.com",
+    "recipients": [],
+    "cc": [],
+    "bcc": [
+      "Fellaini1996@gmail.com"
+    ],
+    "subject": "INTERVIEW APPROVED",
+    "status": "sent"
+  },
+  {
     "timestamp": "2026-05-15T22:13:50.348581",
     "type": "manual",
     "sender": "mowixibucev04@gmail.com",
