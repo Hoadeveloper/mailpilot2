@@ -1,5 +1,27 @@
 [
   {
+    "timestamp": "2026-05-15T23:34:16.484598",
+    "type": "manual",
+    "sender": "mowixibucev04@gmail.com",
+    "recipients": [
+      "Fellaini1996@gmail.com",
+      "toniwalker1058@gmail.com",
+      "Krzy2fly@gmail.com",
+      "koolbreze@outlook.com",
+      "memgrn78@gmail.com"
+    ],
+    "cc": [],
+    "bcc": [
+      "Fellaini1996@gmail.com",
+      "toniwalker1058@gmail.com",
+      "Krzy2fly@gmail.com",
+      "koolbreze@outlook.com",
+      "memgrn78@gmail.com"
+    ],
+    "subject": "INTERVIEW APPROVED",
+    "status": "sent"
+  },
+  {
     "timestamp": "2026-05-15T23:28:51.019800",
     "type": "manual",
     "sender": "mowixibucev04@gmail.com",
