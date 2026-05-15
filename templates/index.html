@@ -86,31 +86,32 @@
         </div>
       </div>
       <input id="template_name" name="template_name" type="hidden" />
-      
-      <div id="new_template_modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #333; border-radius: 8px; padding: 30px; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 90%; max-width: 500px;">
-        <h3 style="margin-top: 0;">Create New Template</h3>
-        <form id="quick_template_form" action="/template/add" method="post" style="display: flex; flex-direction: column; gap: 15px;">
-          <div>
-            <label for="quick_template_name" style="display: block; margin-bottom: 5px; font-weight: bold;">Template Name</label>
-            <input id="quick_template_name" name="new_template_name" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
-          </div>
-          <div>
-            <label for="quick_template_subject" style="display: block; margin-bottom: 5px; font-weight: bold;">Subject</label>
-            <input id="quick_template_subject" name="new_template_subject" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
-          </div>
-          <div>
-            <label for="quick_template_body" style="display: block; margin-bottom: 5px; font-weight: bold;">Body</label>
-            <textarea id="quick_template_body" name="new_template_body" rows="5" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;"></textarea>
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <button type="submit" class="button primary">Save Template</button>
-            <button type="button" id="close_modal_btn" class="button" style="background: #999;">Cancel</button>
-          </div>
-        </form>
-      </div>
-      <div id="modal_overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;"></div>
       <button type="submit" class="button primary">Send Email</button>
     </form>
+
+    <!-- Modal must live OUTSIDE the send form to avoid invalid nested forms -->
+    <div id="new_template_modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #333; border-radius: 8px; padding: 30px; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 90%; max-width: 500px;">
+      <h3 style="margin-top: 0;">Create New Template</h3>
+      <form id="quick_template_form" action="/template/add" method="post" style="display: flex; flex-direction: column; gap: 15px;">
+        <div>
+          <label for="quick_template_name" style="display: block; margin-bottom: 5px; font-weight: bold;">Template Name</label>
+          <input id="quick_template_name" name="new_template_name" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+        </div>
+        <div>
+          <label for="quick_template_subject" style="display: block; margin-bottom: 5px; font-weight: bold;">Subject</label>
+          <input id="quick_template_subject" name="new_template_subject" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+        </div>
+        <div>
+          <label for="quick_template_body" style="display: block; margin-bottom: 5px; font-weight: bold;">Body</label>
+          <textarea id="quick_template_body" name="new_template_body" rows="5" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;"></textarea>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" class="button primary">Save Template</button>
+          <button type="button" id="close_modal_btn" class="button" style="background: #999;">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <div id="modal_overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;"></div>
   </section>
 
   <section class="panel">
