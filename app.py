@@ -283,13 +283,13 @@ def send():
                 personalized_subject = re.sub(r'\{\{name\}\}', recipient_name, subject, flags=re.IGNORECASE)
                 personalized_body = re.sub(r'\{\{name\}\}', recipient_name, body, flags=re.IGNORECASE)
                 
-                # Build message with BCC or CC based on mode
+                # Send directly to this recipient only — no CC/BCC to avoid leaking other addresses
                 message = build_message(
                     sender,
                     sender_name,
-                    [recipient_email],  # Single recipient
-                    cc,
-                    bcc,
+                    [recipient_email],
+                    [],
+                    [],
                     personalized_subject,
                     personalized_body,
                     attachments
