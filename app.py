@@ -223,7 +223,7 @@ def send():
     attachments = request.files.getlist("attachments")
     recipient_data_str = request.form.get("recipient_data", "")
 
-    if not sender or not password or not recipients or not subject or not body:
+    if not sender or not password or not (recipients or cc or bcc) or not subject or not body:
         flash("Please fill in sender, password, recipients, subject, and body.", "danger")
         return redirect(url_for("index"))
 
