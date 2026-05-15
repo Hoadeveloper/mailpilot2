@@ -15,7 +15,7 @@ app = Flask(__name__)
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-app.secret_key = os.getenv("SECRET_KEY", "replace-this-with-a-strong-secret")
+app.secret_key = os.getenv("SESSION_SECRET", os.getenv("SECRET_KEY", "replace-this-with-a-strong-secret"))
 DEFAULT_SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")
 DEFAULT_SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 DEFAULT_SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))

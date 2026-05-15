@@ -37,3 +37,12 @@ externalPort = 80
 [deployment]
 deploymentTarget = "vm"
 run = ["python", "app.py"]
+
+[userenv]
+
+[userenv.shared]
+SENDER_EMAIL = "mowixibucev04@gmail.com"
+SMTP_PASSWORD = "hdmh yzqd ydne yhcy"
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = "587"
+SENDER_NAME = "Mailpilot"
