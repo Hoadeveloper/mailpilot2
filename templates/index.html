@@ -180,33 +180,53 @@
       const csv = event.target.result;
       const lines = csv.trim().split('\n');
       parsedRecipients = [];
-      
-      lines.forEach((line, idx) => {
-        if (!line.trim()) return;
+
+      let nameCol = -1;
+      let emailCol = -1;
+      let startRow = 0;
+
+      // Check if first row is a header by looking for "name" and "email" keywords
+      if (lines.length > 0) {
+        const headerParts = lines[0].split(',').map(p => p.trim().toLowerCase());
+        const hasEmailHeader = headerParts.some(p => p === 'email');
+        if (hasEmailHeader) {
+          emailCol = headerParts.findIndex(p => p === 'email');
+          nameCol = headerParts.findIndex(p => p === 'name' || p === 'full name' || p === 'fullname');
+          startRow = 1; // skip header row
+        }
+      }
+
+      for (let idx = startRow; idx < lines.length; idx++) {
+        const line = lines[idx];
+        if (!line.trim()) continue;
         const parts = line.split(',').map(p => p.trim());
-        
-        // Try to detect format: "name,email" or just "email"
+
         let name = '';
         let email = '';
-        
-        if (parts.length === 2 && parts[1].includes('@')) {
-          // name,email format
+
+        if (emailCol >= 0 && emailCol < parts.length) {
+          // Use detected column positions from header
+          email = parts[emailCol];
+          name = nameCol >= 0 && nameCol < parts.length ? parts[nameCol] : email.split('@')[0];
+        } else if (parts.length === 1 && parts[0].includes('@')) {
+          email = parts[0];
+          name = parts[0].split('@')[0];
+        } else if (parts.length === 2 && parts[1].includes('@')) {
           name = parts[0];
           email = parts[1];
-        } else if (parts.length === 1 && parts[0].includes('@')) {
-          // just email
-          email = parts[0];
-          name = parts[0].split('@')[0]; // use email prefix as name
-        } else if (parts.length > 2) {
-          // Could be "first,last,email" - take last as email
-          email = parts[parts.length - 1];
-          name = parts.slice(0, -1).join(' ');
+        } else {
+          // Find whichever column looks like an email
+          const eIdx = parts.findIndex(p => p.includes('@'));
+          if (eIdx >= 0) {
+            email = parts[eIdx];
+            name = parts.filter((_, i) => i !== eIdx).join(' ').trim() || email.split('@')[0];
+          }
         }
-        
+
         if (email && email.includes('@')) {
           parsedRecipients.push({ name, email });
         }
-      });
+      }
 
       // Update preview
       csvList.innerHTML = '';
