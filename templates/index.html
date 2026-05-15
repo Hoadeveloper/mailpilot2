@@ -27,19 +27,34 @@
         </div>
       </div>
       <div class="row">
-        <label for="recipients">Recipients</label>
+        <label>Recipient Visibility</label>
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="button" class="mode-btn active" data-mode="bcc" style="padding: 10px 20px; border: 2px solid #0066cc; background: #0066cc; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">
+            🔒 BCC (Private)
+          </button>
+          <button type="button" class="mode-btn" data-mode="recipients" style="padding: 10px 20px; border: 2px solid #999; background: white; color: #333; border-radius: 5px; cursor: pointer;">
+            CC (Visible)
+          </button>
+        </div>
+      </div>
+      <div class="row">
+        <label for="recipients">Email Addresses</label>
         <textarea id="recipients" name="recipients" placeholder="email1@example.com, email2@example.com or one per line" rows="3" required></textarea>
       </div>
-      <div class="row small-grid">
-        <div>
-          <label for="cc">CC</label>
-          <input id="cc" name="cc" type="text" placeholder="optional, comma separated" />
+      <div class="row">
+        <label for="csv_file">Or Upload CSV</label>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input id="csv_file" type="file" accept=".csv" />
+          <small style="color: #666;">CSV format: name,email or just email addresses</small>
         </div>
-        <div>
-          <label for="bcc">BCC</label>
-          <input id="bcc" name="bcc" type="text" placeholder="optional, comma separated" />
+        <div id="csv_preview" style="display: none; margin-top: 10px; padding: 10px; background: #f5f5f5; border-radius: 4px; max-height: 200px; overflow-y: auto;">
+          <strong>Preview (<span id="csv_count">0</span> recipients):</strong>
+          <ul id="csv_list" style="margin: 8px 0; padding-left: 20px;"></ul>
         </div>
       </div>
+      <input id="cc" name="cc" type="hidden" />
+      <input id="bcc" name="bcc" type="hidden" />
+      <input id="recipient_data" name="recipient_data" type="hidden" />
       <div class="row">
         <label for="subject">Subject</label>
         <input id="subject" name="subject" type="text" required />
@@ -60,14 +75,40 @@
       </div>
       <div class="row">
         <label for="template_select">Use Template</label>
-        <select id="template_select">
-          <option value="">-- choose a template --</option>
-          {% for template in templates %}
-            <option value="{{ loop.index0 }}">{{ template.name }}</option>
-          {% endfor %}
-        </select>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <select id="template_select" style="flex: 1;">
+            <option value="">-- choose a template --</option>
+            {% for template in templates %}
+              <option value="{{ loop.index0 }}">{{ template.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" id="new_template_btn" class="button" style="padding: 10px 15px; white-space: nowrap;">+ New Template</button>
+        </div>
       </div>
       <input id="template_name" name="template_name" type="hidden" />
+      
+      <div id="new_template_modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border: 2px solid #333; border-radius: 8px; padding: 30px; z-index: 1000; box-shadow: 0 4px 20px rgba(0,0,0,0.3); width: 90%; max-width: 500px;">
+        <h3 style="margin-top: 0;">Create New Template</h3>
+        <form id="quick_template_form" action="/template/add" method="post" style="display: flex; flex-direction: column; gap: 15px;">
+          <div>
+            <label for="quick_template_name" style="display: block; margin-bottom: 5px; font-weight: bold;">Template Name</label>
+            <input id="quick_template_name" name="new_template_name" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+          </div>
+          <div>
+            <label for="quick_template_subject" style="display: block; margin-bottom: 5px; font-weight: bold;">Subject</label>
+            <input id="quick_template_subject" name="new_template_subject" type="text" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" />
+          </div>
+          <div>
+            <label for="quick_template_body" style="display: block; margin-bottom: 5px; font-weight: bold;">Body</label>
+            <textarea id="quick_template_body" name="new_template_body" rows="5" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;"></textarea>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button type="submit" class="button primary">Save Template</button>
+            <button type="button" id="close_modal_btn" class="button" style="background: #999;">Cancel</button>
+          </div>
+        </form>
+      </div>
+      <div id="modal_overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;"></div>
       <button type="submit" class="button primary">Send Email</button>
     </form>
   </section>
@@ -120,6 +161,149 @@
 </div>
 
 <script>
+  // CSV parsing logic
+  const csvFile = document.getElementById('csv_file');
+  const recipientsField = document.getElementById('recipients');
+  const csvPreview = document.getElementById('csv_preview');
+  const csvList = document.getElementById('csv_list');
+  const recipientData = document.getElementById('recipient_data');
+  
+  let parsedRecipients = [];
+
+  csvFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = event.target.result;
+      const lines = csv.trim().split('\n');
+      parsedRecipients = [];
+      
+      lines.forEach((line, idx) => {
+        if (!line.trim()) return;
+        const parts = line.split(',').map(p => p.trim());
+        
+        // Try to detect format: "name,email" or just "email"
+        let name = '';
+        let email = '';
+        
+        if (parts.length === 2 && parts[1].includes('@')) {
+          // name,email format
+          name = parts[0];
+          email = parts[1];
+        } else if (parts.length === 1 && parts[0].includes('@')) {
+          // just email
+          email = parts[0];
+          name = parts[0].split('@')[0]; // use email prefix as name
+        } else if (parts.length > 2) {
+          // Could be "first,last,email" - take last as email
+          email = parts[parts.length - 1];
+          name = parts.slice(0, -1).join(' ');
+        }
+        
+        if (email && email.includes('@')) {
+          parsedRecipients.push({ name, email });
+        }
+      });
+
+      // Update preview
+      csvList.innerHTML = '';
+      parsedRecipients.forEach(r => {
+        const li = document.createElement('li');
+        li.textContent = `${r.name} <${r.email}>`;
+        csvList.appendChild(li);
+      });
+
+      document.getElementById('csv_count').textContent = parsedRecipients.length;
+      csvPreview.style.display = 'block';
+
+      // Populate recipients field with emails
+      recipientsField.value = parsedRecipients.map(r => r.email).join('\n');
+      
+      // Store recipient data as JSON
+      recipientData.value = JSON.stringify(parsedRecipients);
+    };
+    reader.readAsText(file);
+  });
+
+  // Modal logic for quick template creation
+  const newTemplateBtn = document.getElementById('new_template_btn');
+  const closeModalBtn = document.getElementById('close_modal_btn');
+  const modal = document.getElementById('new_template_modal');
+  const overlay = document.getElementById('modal_overlay');
+  const quickTemplateForm = document.getElementById('quick_template_form');
+
+  newTemplateBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.style.display = 'block';
+    overlay.style.display = 'block';
+  });
+
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+      if (quickTemplateForm) quickTemplateForm.reset();
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      modal.style.display = 'none';
+      overlay.style.display = 'none';
+      if (quickTemplateForm) quickTemplateForm.reset();
+    });
+  }
+
+  if (quickTemplateForm) quickTemplateForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    fetch('/template/add', {
+      method: 'POST',
+      body: new FormData(quickTemplateForm)
+    }).then(() => {
+      location.reload();
+    });
+  });
+
+  // Mode selector logic
+  let selectedMode = 'bcc';
+  const modeBtns = document.querySelectorAll('.mode-btn');
+  const ccField = document.getElementById('cc');
+  const bccField = document.getElementById('bcc');
+  const form = document.querySelector('form[action="/send"]');
+
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modeBtns.forEach(b => {
+        b.style.border = '2px solid #999';
+        b.style.background = 'white';
+        b.style.color = '#333';
+      });
+      btn.style.border = '2px solid #0066cc';
+      btn.style.background = '#0066cc';
+      btn.style.color = 'white';
+      selectedMode = btn.dataset.mode;
+    });
+  });
+
+  // On form submit, populate the correct field based on mode
+  form.addEventListener('submit', (e) => {
+    const addresses = recipientsField.value;
+    if (selectedMode === 'bcc') {
+      bccField.value = addresses;
+      ccField.value = '';
+      recipientsField.value = '';
+    } else {
+      ccField.value = addresses;
+      bccField.value = '';
+      recipientsField.value = '';
+    }
+  });
+
+  // Template selector logic
   const templates = {{ templates | tojson | safe }};
   const templateSelect = document.getElementById('template_select');
   const subjectField = document.getElementById('subject');

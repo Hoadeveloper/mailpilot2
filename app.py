@@ -15,7 +15,7 @@ app = Flask(__name__)
 BASE_DIR = Path(__file__).parent
 load_dotenv(BASE_DIR / ".env")
 
-app.secret_key = os.getenv("SESSION_SECRET", os.getenv("SECRET_KEY", "replace-this-with-a-strong-secret"))
+app.secret_key = os.getenv("SECRET_KEY", "replace-this-with-a-strong-secret")
 DEFAULT_SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")
 DEFAULT_SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 DEFAULT_SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -221,6 +221,7 @@ def send():
     schedule_time = request.form.get("schedule_time", "").strip()
     template_name = request.form.get("template_name", "")
     attachments = request.files.getlist("attachments")
+    recipient_data_str = request.form.get("recipient_data", "")
 
     if not sender or not password or not recipients or not subject or not body:
         flash("Please fill in sender, password, recipients, subject, and body.", "danger")
@@ -258,23 +259,73 @@ def send():
 
     try:
         sender_name = request.form.get("sender_name", "")
-        message = build_message(sender, sender_name, recipients, cc, bcc, subject, body, attachments)
-        send_smtp_message(smtp_host, smtp_port, sender, password, message)
+        
+        # Check if we have recipient data with names for personalization
+        recipient_list_with_names = []
+        if recipient_data_str:
+            try:
+                import json
+                recipient_list_with_names = json.loads(recipient_data_str)
+            except:
+                pass
+        
+        # If we have personalization data, send individual emails
+        if recipient_list_with_names:
+            for recipient_obj in recipient_list_with_names:
+                recipient_email = recipient_obj.get("email", "").strip()
+                recipient_name = recipient_obj.get("name", "").strip()
+                
+                if not recipient_email:
+                    continue
+                
+                # Personalize subject and body
+                personalized_subject = subject.replace("{{name}}", recipient_name)
+                personalized_body = body.replace("{{name}}", recipient_name)
+                
+                # Build message with BCC or CC based on mode
+                message = build_message(
+                    sender,
+                    sender_name,
+                    [recipient_email],  # Single recipient
+                    cc,
+                    bcc,
+                    personalized_subject,
+                    personalized_body,
+                    attachments
+                )
+                send_smtp_message(smtp_host, smtp_port, sender, password, message)
+            
+            append_history({
+                "timestamp": datetime.utcnow().isoformat(),
+                "type": "manual",
+                "sender": sender,
+                "recipients": [r.get("email") for r in recipient_list_with_names],
+                "cc": cc,
+                "bcc": bcc,
+                "subject": subject,
+                "status": "sent",
+            })
+            flash(f"Emails sent successfully to {len(recipient_list_with_names)} recipients.", "success")
+        else:
+            # Send single email to all recipients (old behavior)
+            message = build_message(sender, sender_name, recipients, cc, bcc, subject, body, attachments)
+            send_smtp_message(smtp_host, smtp_port, sender, password, message)
+            append_history({
+                "timestamp": datetime.utcnow().isoformat(),
+                "type": "manual",
+                "sender": sender,
+                "recipients": recipients,
+                "cc": cc,
+                "bcc": bcc,
+                "subject": subject,
+                "status": "sent",
+            })
+            flash("Email sent successfully.", "success")
+        
         # save last used sender name to settings
         settings = load_json(SETTINGS_FILE, {}) or {}
         settings["last_sender_name"] = sender_name
         save_json(SETTINGS_FILE, settings)
-        append_history({
-            "timestamp": datetime.utcnow().isoformat(),
-            "type": "manual",
-            "sender": sender,
-            "recipients": recipients,
-            "cc": cc,
-            "bcc": bcc,
-            "subject": subject,
-            "status": "sent",
-        })
-        flash("Email sent successfully.", "success")
     except Exception as exc:
         append_history({
             "timestamp": datetime.utcnow().isoformat(),
